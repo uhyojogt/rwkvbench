@@ -63,12 +63,23 @@ cat results/raw/torch-cuda-sweep/summary.json
 Run a Hugging Face causal LM smoke benchmark:
 
 ```bash
-python -m pip install "numpy<2" "transformers<5" accelerate
+python -m pip install "numpy<2" "transformers==4.38.2" "accelerate==0.27.2"
 CUDA_VISIBLE_DEVICES=0 bash scripts/run-hf-causal-lm-smoke.sh
 cat results/raw/hf-causal-lm-smoke.json
 
 CUDA_VISIBLE_DEVICES=0 bash scripts/run-hf-causal-lm-sweep.sh
 cat results/raw/hf-causal-lm-sweep/summary.json
+```
+
+Run a converted RWKV-7 Hugging Face adapter benchmark:
+
+```bash
+export RWKV7_MODEL_DIR=/path/to/rwkv7-g1d-0.1b-hf
+CUDA_VISIBLE_DEVICES=0 bash scripts/run-rwkv7-hf-smoke.sh
+cat results/raw/rwkv7-hf-smoke.json
+
+CUDA_VISIBLE_DEVICES=0 bash scripts/run-rwkv7-hf-sweep.sh
+cat results/raw/rwkv7-hf-sweep/summary.json
 ```
 
 Run tests:
@@ -120,10 +131,15 @@ cat results/raw/torch-cuda-smoke.json
 CUDA_VISIBLE_DEVICES=0 bash scripts/run-torch-cuda-sweep.sh
 cat results/raw/torch-cuda-sweep/summary.json
 
-python -m pip install "numpy<2" "transformers<5" accelerate
+python -m pip install "numpy<2" "transformers==4.38.2" "accelerate==0.27.2"
 CUDA_VISIBLE_DEVICES=0 bash scripts/run-hf-causal-lm-smoke.sh
 cat results/raw/hf-causal-lm-smoke.json
+
+export RWKV7_MODEL_DIR=/path/to/rwkv7-g1d-0.1b-hf
+CUDA_VISIBLE_DEVICES=0 bash scripts/run-rwkv7-hf-smoke.sh
+cat results/raw/rwkv7-hf-smoke.json
 ```
 
-Real RWKV / Transformers / vLLM / SGLang backends will be added after this GPU
-smoke pipeline is stable.
+The RWKV-7 adapter path expects a converted Hugging Face model directory, not a
+raw `.pth` checkpoint. The community adapter documents conversion through
+`convert_rwkv7_to_hf.py` in `btlqql/rwkv7-hf-adapter`.
