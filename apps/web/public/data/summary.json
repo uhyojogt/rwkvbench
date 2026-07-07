@@ -1,0 +1,250 @@
+[
+  {
+    "run_id": "sample-1",
+    "created_at": "2026-07-07T10:45:36.913726+00:00",
+    "backend": "torch-cuda",
+    "model": "torch-linear-smoke",
+    "hardware": {
+      "os": "Linux 4.4.0-176-generic",
+      "python": "3.10.18",
+      "cpu": "x86_64",
+      "gpu": "Tesla V100-PCIE-32GB",
+      "driver": "550.54.15",
+      "cuda": "12.4"
+    },
+    "config": { "batch_size": 1, "prompt_len": 128, "gen_len": 128, "dtype": "fp16" },
+    "metrics": {
+      "prefill_tps": 786163.51,
+      "decode_tps": 21118.43,
+      "total_tps": 41131.95,
+      "latency_p50_ms": 0.0474,
+      "latency_p95_ms": 0.0474,
+      "vram_peak_mb": 42
+    },
+    "metadata": {
+      "source": "torch-cuda-smoke",
+      "torch_version": "2.1.2+cu118",
+      "device": "cuda:0",
+      "device_name": "Tesla V100-PCIE-32GB",
+      "hidden_size": 4096,
+      "warmup_steps": 5
+    }
+  },
+  {
+    "run_id": "sample-2",
+    "created_at": "2026-07-07T10:45:37.578347+00:00",
+    "backend": "torch-cuda",
+    "model": "torch-linear-smoke",
+    "hardware": {
+      "os": "Linux 4.4.0-176-generic",
+      "python": "3.10.18",
+      "cpu": "x86_64",
+      "gpu": "Tesla V100-PCIE-32GB",
+      "driver": "550.54.15",
+      "cuda": "12.4"
+    },
+    "config": { "batch_size": 1, "prompt_len": 512, "gen_len": 128, "dtype": "fp16" },
+    "metrics": {
+      "prefill_tps": 2283105.08,
+      "decode_tps": 11727.18,
+      "total_tps": 57455.42,
+      "latency_p50_ms": 0.0853,
+      "latency_p95_ms": 0.0853,
+      "vram_peak_mb": 81
+    },
+    "metadata": {
+      "source": "torch-cuda-smoke",
+      "torch_version": "2.1.2+cu118",
+      "device": "cuda:0",
+      "device_name": "Tesla V100-PCIE-32GB",
+      "hidden_size": 4096,
+      "warmup_steps": 5
+    }
+  },
+  {
+    "run_id": "sample-3",
+    "created_at": "2026-07-07T10:45:38.352965+00:00",
+    "backend": "torch-cuda",
+    "model": "torch-linear-smoke",
+    "hardware": {
+      "os": "Linux 4.4.0-176-generic",
+      "python": "3.10.18",
+      "cpu": "x86_64",
+      "gpu": "Tesla V100-PCIE-32GB",
+      "driver": "550.54.15",
+      "cuda": "12.4"
+    },
+    "config": { "batch_size": 2, "prompt_len": 128, "gen_len": 128, "dtype": "fp16" },
+    "metrics": {
+      "prefill_tps": 1666666.59,
+      "decode_tps": 13819.79,
+      "total_tps": 27412.28,
+      "latency_p50_ms": 0.1447,
+      "latency_p95_ms": 0.1447,
+      "vram_peak_mb": 77
+    },
+    "metadata": {
+      "source": "torch-cuda-smoke",
+      "torch_version": "2.1.2+cu118",
+      "device": "cuda:0",
+      "device_name": "Tesla V100-PCIE-32GB",
+      "hidden_size": 4096,
+      "warmup_steps": 5
+    }
+  },
+  {
+    "run_id": "sample-4",
+    "created_at": "2026-07-07T10:45:39.098737+00:00",
+    "backend": "torch-cuda",
+    "model": "torch-linear-smoke",
+    "hardware": {
+      "os": "Linux 4.4.0-176-generic",
+      "python": "3.10.18",
+      "cpu": "x86_64",
+      "gpu": "Tesla V100-PCIE-32GB",
+      "driver": "550.54.15",
+      "cuda": "12.4"
+    },
+    "config": { "batch_size": 2, "prompt_len": 512, "gen_len": 128, "dtype": "fp16" },
+    "metrics": {
+      "prefill_tps": 2136752.08,
+      "decode_tps": 30077.0,
+      "total_tps": 142369.02,
+      "latency_p50_ms": 0.0665,
+      "latency_p95_ms": 0.0665,
+      "vram_peak_mb": 89
+    },
+    "metadata": {
+      "source": "torch-cuda-smoke",
+      "torch_version": "2.1.2+cu118",
+      "device": "cuda:0",
+      "device_name": "Tesla V100-PCIE-32GB",
+      "hidden_size": 4096,
+      "warmup_steps": 5
+    }
+  },
+  {
+    "run_id": "sample-5",
+    "created_at": "2026-07-07T10:45:39.767744+00:00",
+    "backend": "torch-cuda",
+    "model": "torch-linear-smoke",
+    "hardware": {
+      "os": "Linux 4.4.0-176-generic",
+      "python": "3.10.18",
+      "cpu": "x86_64",
+      "gpu": "Tesla V100-PCIE-32GB",
+      "driver": "550.54.15",
+      "cuda": "12.4"
+    },
+    "config": { "batch_size": 4, "prompt_len": 128, "gen_len": 128, "dtype": "fp16" },
+    "metrics": {
+      "prefill_tps": 2272727.25,
+      "decode_tps": 27531.52,
+      "total_tps": 54404.0,
+      "latency_p50_ms": 0.1453,
+      "latency_p95_ms": 0.1453,
+      "vram_peak_mb": 81
+    },
+    "metadata": {
+      "source": "torch-cuda-smoke",
+      "torch_version": "2.1.2+cu118",
+      "device": "cuda:0",
+      "device_name": "Tesla V100-PCIE-32GB",
+      "hidden_size": 4096,
+      "warmup_steps": 5
+    }
+  },
+  {
+    "run_id": "sample-6",
+    "created_at": "2026-07-07T10:45:40.550074+00:00",
+    "backend": "torch-cuda",
+    "model": "torch-linear-smoke",
+    "hardware": {
+      "os": "Linux 4.4.0-176-generic",
+      "python": "3.10.18",
+      "cpu": "x86_64",
+      "gpu": "Tesla V100-PCIE-32GB",
+      "driver": "550.54.15",
+      "cuda": "12.4"
+    },
+    "config": { "batch_size": 4, "prompt_len": 512, "gen_len": 128, "dtype": "fp16" },
+    "metrics": {
+      "prefill_tps": 2380952.4,
+      "decode_tps": 30888.99,
+      "total_tps": 146825.64,
+      "latency_p50_ms": 0.1295,
+      "latency_p95_ms": 0.1295,
+      "vram_peak_mb": 105
+    },
+    "metadata": {
+      "source": "torch-cuda-smoke",
+      "torch_version": "2.1.2+cu118",
+      "device": "cuda:0",
+      "device_name": "Tesla V100-PCIE-32GB",
+      "hidden_size": 4096,
+      "warmup_steps": 5
+    }
+  },
+  {
+    "run_id": "sample-7",
+    "created_at": "2026-07-07T10:45:41.178852+00:00",
+    "backend": "torch-cuda",
+    "model": "torch-linear-smoke",
+    "hardware": {
+      "os": "Linux 4.4.0-176-generic",
+      "python": "3.10.18",
+      "cpu": "x86_64",
+      "gpu": "Tesla V100-PCIE-32GB",
+      "driver": "550.54.15",
+      "cuda": "12.4"
+    },
+    "config": { "batch_size": 8, "prompt_len": 128, "gen_len": 128, "dtype": "fp16" },
+    "metrics": {
+      "prefill_tps": 2293577.97,
+      "decode_tps": 54908.85,
+      "total_tps": 107250.11,
+      "latency_p50_ms": 0.1457,
+      "latency_p95_ms": 0.1457,
+      "vram_peak_mb": 89
+    },
+    "metadata": {
+      "source": "torch-cuda-smoke",
+      "torch_version": "2.1.2+cu118",
+      "device": "cuda:0",
+      "device_name": "Tesla V100-PCIE-32GB",
+      "hidden_size": 4096,
+      "warmup_steps": 5
+    }
+  },
+  {
+    "run_id": "sample-8",
+    "created_at": "2026-07-07T10:45:42.022820+00:00",
+    "backend": "torch-cuda",
+    "model": "torch-linear-smoke",
+    "hardware": {
+      "os": "Linux 4.4.0-176-generic",
+      "python": "3.10.18",
+      "cpu": "x86_64",
+      "gpu": "Tesla V100-PCIE-32GB",
+      "driver": "550.54.15",
+      "cuda": "12.4"
+    },
+    "config": { "batch_size": 8, "prompt_len": 512, "gen_len": 128, "dtype": "fp16" },
+    "metrics": {
+      "prefill_tps": 2650762.16,
+      "decode_tps": 54966.19,
+      "total_tps": 253781.33,
+      "latency_p50_ms": 0.1455,
+      "latency_p95_ms": 0.1455,
+      "vram_peak_mb": 137
+    },
+    "metadata": {
+      "source": "torch-cuda-smoke",
+      "torch_version": "2.1.2+cu118",
+      "device": "cuda:0",
+      "device_name": "Tesla V100-PCIE-32GB",
+      "hidden_size": 4096,
+      "warmup_steps": 5
+    }
+  }
+]

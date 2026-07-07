@@ -66,6 +66,23 @@ Run tests:
 pytest
 ```
 
+## Dashboard
+
+The dashboard reads `apps/web/public/data/summary.json`.
+
+```powershell
+cd apps\web
+npm install
+npm run dev
+```
+
+To preview real server results, copy the server sweep file into the web public
+data path:
+
+```bash
+cp results/raw/torch-cuda-sweep/summary.json apps/web/public/data/summary.json
+```
+
 ## GPU Server Flow
 
 For now, use GitHub as the code handoff:

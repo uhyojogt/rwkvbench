@@ -28,3 +28,24 @@ jobs:
         run: |
           python -m benchkit.run --backend mock --model fake-rwkv7 --out results/examples/ci-mock-run.json
           python -m json.tool results/examples/ci-mock-run.json > /dev/null
+
+  web:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Build dashboard
+        working-directory: apps/web
+        run: npm run build
