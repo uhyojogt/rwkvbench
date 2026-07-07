@@ -8,7 +8,7 @@ from benchkit.mock_backend import run_mock_benchmark
 from benchkit.schema import BenchmarkConfig
 
 
-SUPPORTED_BACKENDS = {"mock"}
+SUPPORTED_BACKENDS = {"mock", "torch-cuda"}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,6 +19,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--prompt-len", type=int, default=128)
     parser.add_argument("--gen-len", type=int, default=128)
     parser.add_argument("--dtype", default="fp16")
+    parser.add_argument("--hidden-size", type=int, default=4096)
+    parser.add_argument("--warmup-steps", type=int, default=5)
+    parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--out", required=True, help="Path to write benchmark JSON")
     return parser
 
@@ -34,6 +37,17 @@ def main() -> None:
 
     if args.backend == "mock":
         result = run_mock_benchmark(backend=args.backend, model=args.model, config=config)
+    elif args.backend == "torch-cuda":
+        from benchkit.torch_cuda_backend import run_torch_cuda_benchmark
+
+        result = run_torch_cuda_benchmark(
+            backend=args.backend,
+            model=args.model,
+            config=config,
+            hidden_size=args.hidden_size,
+            warmup_steps=args.warmup_steps,
+            device=args.device,
+        )
     else:
         raise ValueError(f"Unsupported backend: {args.backend}")
 

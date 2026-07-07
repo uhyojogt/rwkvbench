@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "run_id": "2e4a7535-a339-4895-80a2-50951d70e058",
-  "created_at": "2026-07-07T07:32:26.421580+00:00",
+  "run_id": "85914e0f-bea3-426a-9de9-ed48130bf456",
+  "created_at": "2026-07-07T09:26:04.271671+00:00",
   "backend": "mock",
   "model": "fake-rwkv7",
   "hardware": {

@@ -39,6 +39,20 @@ Run a mock benchmark:
 python -m benchkit.run --backend mock --model fake-rwkv7 --out results\examples\mock-run.json
 ```
 
+Run a CUDA smoke benchmark on a GPU server:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python -m benchkit.run \
+  --backend torch-cuda \
+  --model torch-linear-smoke \
+  --batch-size 1 \
+  --prompt-len 128 \
+  --gen-len 128 \
+  --dtype fp16 \
+  --hidden-size 4096 \
+  --out results/raw/torch-cuda-smoke.json
+```
+
 Run tests:
 
 ```powershell
@@ -55,5 +69,19 @@ python -m pip install -e ./packages/benchkit
 python -m benchkit.run --backend mock --model fake-rwkv7 --out results/examples/server-mock-run.json
 ```
 
-Real RWKV / Transformers / vLLM / SGLang backends will be added after this
-mock result pipeline is stable.
+Then verify CUDA timing with PyTorch:
+
+```bash
+python - <<'PY'
+import torch
+print(torch.__version__)
+print(torch.cuda.is_available())
+print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "no cuda")
+PY
+
+CUDA_VISIBLE_DEVICES=0 bash scripts/run-torch-cuda-smoke.sh
+cat results/raw/torch-cuda-smoke.json
+```
+
+Real RWKV / Transformers / vLLM / SGLang backends will be added after this GPU
+smoke pipeline is stable.
