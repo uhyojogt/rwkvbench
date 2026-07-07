@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# RWKVBench local artifacts
+models/
+outputs/
+results/raw/
+*.pt
+*.pth
+*.safetensors
+*.gguf

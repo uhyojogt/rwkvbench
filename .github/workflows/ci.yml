@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  benchkit:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ./packages/benchkit pytest
+
+      - name: Run tests
+        run: pytest
+
+      - name: Run mock benchmark
+        run: |
+          python -m benchkit.run --backend mock --model fake-rwkv7 --out results/examples/ci-mock-run.json
+          python -m json.tool results/examples/ci-mock-run.json > /dev/null
