@@ -53,6 +53,13 @@ CUDA_VISIBLE_DEVICES=0 python -m benchkit.run \
   --out results/raw/torch-cuda-smoke.json
 ```
 
+Run a small CUDA sweep:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 bash scripts/run-torch-cuda-sweep.sh
+cat results/raw/torch-cuda-sweep/summary.json
+```
+
 Run tests:
 
 ```powershell
@@ -81,6 +88,9 @@ PY
 
 CUDA_VISIBLE_DEVICES=0 bash scripts/run-torch-cuda-smoke.sh
 cat results/raw/torch-cuda-smoke.json
+
+CUDA_VISIBLE_DEVICES=0 bash scripts/run-torch-cuda-sweep.sh
+cat results/raw/torch-cuda-sweep/summary.json
 ```
 
 Real RWKV / Transformers / vLLM / SGLang backends will be added after this GPU

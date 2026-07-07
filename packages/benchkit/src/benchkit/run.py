@@ -4,11 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
-from benchkit.mock_backend import run_mock_benchmark
+from benchkit.backends import SUPPORTED_BACKENDS, run_benchmark
 from benchkit.schema import BenchmarkConfig
-
-
-SUPPORTED_BACKENDS = {"mock", "torch-cuda"}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -35,21 +32,14 @@ def main() -> None:
         dtype=args.dtype,
     )
 
-    if args.backend == "mock":
-        result = run_mock_benchmark(backend=args.backend, model=args.model, config=config)
-    elif args.backend == "torch-cuda":
-        from benchkit.torch_cuda_backend import run_torch_cuda_benchmark
-
-        result = run_torch_cuda_benchmark(
-            backend=args.backend,
-            model=args.model,
-            config=config,
-            hidden_size=args.hidden_size,
-            warmup_steps=args.warmup_steps,
-            device=args.device,
-        )
-    else:
-        raise ValueError(f"Unsupported backend: {args.backend}")
+    result = run_benchmark(
+        backend=args.backend,
+        model=args.model,
+        config=config,
+        hidden_size=args.hidden_size,
+        warmup_steps=args.warmup_steps,
+        device=args.device,
+    )
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
