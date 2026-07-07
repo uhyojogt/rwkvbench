@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -25,13 +26,25 @@ def query_nvidia_smi() -> dict[str, str | None]:
     if shutil.which("nvidia-smi") is None:
         return {"gpu": None, "driver": None, "cuda": None}
 
-    query = "name,driver_version,cuda_version"
-    command = [
+    summary = run_command(["nvidia-smi"])
+    cuda = parse_cuda_version(summary)
+
+    query_command = [
         "nvidia-smi",
-        f"--query-gpu={query}",
+        "--query-gpu=name,driver_version",
         "--format=csv,noheader,nounits",
     ]
+    query_output = run_command(query_command)
+    parsed = parse_gpu_query_output(query_output)
 
+    return {
+        "gpu": parsed.get("gpu"),
+        "driver": parsed.get("driver"),
+        "cuda": cuda,
+    }
+
+
+def run_command(command: list[str]) -> str:
     try:
         completed = subprocess.run(
             command,
@@ -41,14 +54,23 @@ def query_nvidia_smi() -> dict[str, str | None]:
             timeout=10,
         )
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        return {"gpu": None, "driver": None, "cuda": None}
+        return ""
 
-    first_line = completed.stdout.strip().splitlines()[0] if completed.stdout.strip() else ""
+    return completed.stdout
+
+
+def parse_gpu_query_output(output: str) -> dict[str, str | None]:
+    first_line = output.strip().splitlines()[0] if output.strip() else ""
     parts = [part.strip() for part in first_line.split(",")]
-    if len(parts) != 3:
-        return {"gpu": None, "driver": None, "cuda": None}
+    if len(parts) != 2:
+        return {"gpu": None, "driver": None}
 
-    return {"gpu": parts[0], "driver": parts[1], "cuda": parts[2]}
+    return {"gpu": parts[0], "driver": parts[1]}
+
+
+def parse_cuda_version(output: str) -> str | None:
+    match = re.search(r"CUDA Version:\s*([0-9.]+)", output)
+    return match.group(1) if match else None
 
 
 def hardware_info_json() -> str:
