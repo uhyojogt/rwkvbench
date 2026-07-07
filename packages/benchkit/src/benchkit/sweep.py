@@ -19,6 +19,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--hidden-size", type=int, default=4096)
     parser.add_argument("--warmup-steps", type=int, default=5)
     parser.add_argument("--device", default="cuda:0")
+    parser.add_argument("--prompt", default="RWKVBench measures model inference throughput.")
+    parser.add_argument("--trust-remote-code", action="store_true")
+    parser.add_argument("--revision")
     parser.add_argument("--out-dir", required=True)
     return parser
 
@@ -45,6 +48,9 @@ def main() -> None:
                     hidden_size=args.hidden_size,
                     warmup_steps=args.warmup_steps,
                     device=args.device,
+                    prompt=args.prompt,
+                    trust_remote_code=args.trust_remote_code,
+                    revision=args.revision,
                 )
                 filename = build_result_filename(args.backend, config)
                 write_json(out_dir / filename, result.to_dict())

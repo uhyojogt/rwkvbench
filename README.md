@@ -60,6 +60,17 @@ CUDA_VISIBLE_DEVICES=0 bash scripts/run-torch-cuda-sweep.sh
 cat results/raw/torch-cuda-sweep/summary.json
 ```
 
+Run a Hugging Face causal LM smoke benchmark:
+
+```bash
+python -m pip install "numpy<2" "transformers<5" accelerate
+CUDA_VISIBLE_DEVICES=0 bash scripts/run-hf-causal-lm-smoke.sh
+cat results/raw/hf-causal-lm-smoke.json
+
+CUDA_VISIBLE_DEVICES=0 bash scripts/run-hf-causal-lm-sweep.sh
+cat results/raw/hf-causal-lm-sweep/summary.json
+```
+
 Run tests:
 
 ```powershell
@@ -108,6 +119,10 @@ cat results/raw/torch-cuda-smoke.json
 
 CUDA_VISIBLE_DEVICES=0 bash scripts/run-torch-cuda-sweep.sh
 cat results/raw/torch-cuda-sweep/summary.json
+
+python -m pip install "numpy<2" "transformers<5" accelerate
+CUDA_VISIBLE_DEVICES=0 bash scripts/run-hf-causal-lm-smoke.sh
+cat results/raw/hf-causal-lm-smoke.json
 ```
 
 Real RWKV / Transformers / vLLM / SGLang backends will be added after this GPU
