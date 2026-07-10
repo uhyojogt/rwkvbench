@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import time
+from pathlib import Path
 from uuid import uuid4
 
 from benchkit.schema import (
@@ -55,11 +56,25 @@ def run_hf_causal_lm_benchmark(
     if torch_device.type == "cuda":
         torch.cuda.set_device(torch_device)
         torch.cuda.empty_cache()
-        torch.cuda.reset_peak_memory_stats(torch_device)
 
     with torch.inference_mode():
+        warmup_outputs = None
         for _ in range(warmup_steps):
-            _ = hf_model(input_ids=input_ids, use_cache=True)
+            warmup_outputs = hf_model(input_ids=input_ids, use_cache=True)
+
+        if warmup_outputs is not None:
+            time_decode_ms(
+                torch=torch,
+                model=hf_model,
+                device=torch_device,
+                prefill_outputs=warmup_outputs,
+                gen_len=warmup_steps,
+            )
+            warmup_outputs = None
+
+        if torch_device.type == "cuda":
+            torch.cuda.synchronize(torch_device)
+            torch.cuda.reset_peak_memory_stats(torch_device)
 
         synchronize(torch, torch_device)
         prefill_ms, outputs = time_torch_op_ms(
@@ -67,7 +82,7 @@ def run_hf_causal_lm_benchmark(
             device=torch_device,
             op=lambda: hf_model(input_ids=input_ids, use_cache=True),
         )
-        decode_ms = time_decode_ms(
+        decode_ms, token_latencies_ms = time_decode_ms(
             torch=torch,
             model=hf_model,
             device=torch_device,
@@ -85,20 +100,21 @@ def run_hf_causal_lm_benchmark(
         run_id=str(uuid4()),
         created_at=utc_now_iso(),
         backend=backend,
-        model=model,
+        model=public_model_name(model),
         hardware=collect_hardware_info(),
         config=config,
         metrics=BenchmarkMetrics(
             prefill_tps=round(tokens_per_second(prefill_tokens, prefill_ms), 2),
             decode_tps=round(tokens_per_second(decode_tokens, decode_ms), 2),
             total_tps=round(tokens_per_second(prefill_tokens + decode_tokens, total_ms), 2),
-            latency_p50_ms=round(decode_ms / max(config.gen_len, 1), 4),
-            latency_p95_ms=round(decode_ms / max(config.gen_len, 1), 4),
+            latency_p50_ms=round(percentile(token_latencies_ms, 0.50), 4),
+            latency_p95_ms=round(percentile(token_latencies_ms, 0.95), 4),
             vram_peak_mb=vram_peak_mb,
         ),
         metadata={
             "source": "hf-causal-lm",
             "torch_version": torch.__version__,
+            "torch_cuda_version": getattr(torch.version, "cuda", None),
             "transformers_version": transformers.__version__,
             "device": str(torch_device),
             "model_class": hf_model.__class__.__name__,
@@ -176,29 +192,79 @@ def time_torch_op_ms(*, torch, device, op):
     return elapsed_ms, result
 
 
-def time_decode_ms(*, torch, model, device, prefill_outputs, gen_len: int) -> float:
+def time_decode_ms(
+    *, torch, model, device, prefill_outputs, gen_len: int
+) -> tuple[float, list[float]]:
     logits = prefill_outputs.logits
     next_token = logits[:, -1, :].argmax(dim=-1, keepdim=True)
     past_key_values = getattr(prefill_outputs, "past_key_values", None)
 
-    def decode_loop():
-        nonlocal next_token, past_key_values
-        current_ids = next_token
+    if device.type == "cuda":
+        overall_start = torch.cuda.Event(enable_timing=True)
+        overall_end = torch.cuda.Event(enable_timing=True)
+        token_events = []
+        overall_start.record()
         for _ in range(gen_len):
-            if past_key_values is None:
-                outputs = model(input_ids=current_ids, use_cache=True)
-                current_ids = outputs.logits[:, -1, :].argmax(dim=-1, keepdim=True)
-            else:
-                outputs = model(
-                    input_ids=next_token,
-                    past_key_values=past_key_values,
-                    use_cache=True,
-                )
-                next_token = outputs.logits[:, -1, :].argmax(dim=-1, keepdim=True)
-                past_key_values = getattr(outputs, "past_key_values", None)
+            token_start = torch.cuda.Event(enable_timing=True)
+            token_end = torch.cuda.Event(enable_timing=True)
+            token_start.record()
+            next_token, past_key_values = decode_step(
+                model=model,
+                next_token=next_token,
+                past_key_values=past_key_values,
+            )
+            token_end.record()
+            token_events.append((token_start, token_end))
+        overall_end.record()
+        torch.cuda.synchronize(device)
+        return (
+            float(overall_start.elapsed_time(overall_end)),
+            [float(start.elapsed_time(end)) for start, end in token_events],
+        )
 
-    elapsed_ms, _ = time_torch_op_ms(torch=torch, device=device, op=decode_loop)
-    return elapsed_ms
+    overall_start = time.perf_counter()
+    token_latencies_ms = []
+    for _ in range(gen_len):
+        token_start = time.perf_counter()
+        next_token, past_key_values = decode_step(
+            model=model,
+            next_token=next_token,
+            past_key_values=past_key_values,
+        )
+        token_latencies_ms.append((time.perf_counter() - token_start) * 1000)
+    return (time.perf_counter() - overall_start) * 1000, token_latencies_ms
+
+
+def decode_step(*, model, next_token, past_key_values):
+    model_kwargs = {"input_ids": next_token, "use_cache": True}
+    if past_key_values is not None:
+        model_kwargs["past_key_values"] = past_key_values
+
+    outputs = model(**model_kwargs)
+    next_token = outputs.logits[:, -1, :].argmax(dim=-1, keepdim=True)
+    return next_token, getattr(outputs, "past_key_values", None)
+
+
+def percentile(values: list[float], quantile: float) -> float:
+    if not values:
+        return 0.0
+    if not 0 <= quantile <= 1:
+        raise ValueError("quantile must be between 0 and 1")
+
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * quantile
+    lower = math.floor(position)
+    upper = math.ceil(position)
+    if lower == upper:
+        return ordered[lower]
+
+    weight = position - lower
+    return ordered[lower] * (1 - weight) + ordered[upper] * weight
+
+
+def public_model_name(model: str) -> str:
+    path = Path(model)
+    return path.name if path.exists() else model
 
 
 def synchronize(torch, device) -> None:

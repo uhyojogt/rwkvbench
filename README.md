@@ -74,13 +74,21 @@ cat results/raw/hf-causal-lm-sweep/summary.json
 Run a converted RWKV-7 Hugging Face adapter benchmark:
 
 ```bash
-export RWKV7_MODEL_DIR=/path/to/rwkv7-g1d-0.1b-hf
-CUDA_VISIBLE_DEVICES=0 bash scripts/run-rwkv7-hf-smoke.sh
+export RWKV7_MODEL_DIR=/path/to/rwkv7_g1d_01b_hf
+CUDA_VISIBLE_DEVICES=0 RWKV7_NATIVE_MODEL=1 bash scripts/run-rwkv7-hf-smoke.sh
 cat results/raw/rwkv7-hf-smoke.json
 
-CUDA_VISIBLE_DEVICES=0 bash scripts/run-rwkv7-hf-sweep.sh
+CUDA_VISIBLE_DEVICES=0 RWKV7_NATIVE_MODEL=1 bash scripts/run-rwkv7-hf-sweep.sh
 cat results/raw/rwkv7-hf-sweep/summary.json
 ```
+
+Local adapter directories should use Python-safe names without dots because
+Transformers loads trusted model code through a generated Python package.
+
+The Hugging Face backend warms both prefill and decode paths before measurement.
+Decode throughput uses one end-to-end CUDA interval, while P50 and P95 are
+calculated from per-generation-step CUDA event samples. The public `model` field
+contains only a local directory name; local absolute paths are not emitted.
 
 Run tests:
 
@@ -135,8 +143,8 @@ python -m pip install "numpy<2" "transformers==4.38.2" "accelerate==0.27.2"
 CUDA_VISIBLE_DEVICES=0 bash scripts/run-hf-causal-lm-smoke.sh
 cat results/raw/hf-causal-lm-smoke.json
 
-export RWKV7_MODEL_DIR=/path/to/rwkv7-g1d-0.1b-hf
-CUDA_VISIBLE_DEVICES=0 bash scripts/run-rwkv7-hf-smoke.sh
+export RWKV7_MODEL_DIR=/path/to/rwkv7_g1d_01b_hf
+CUDA_VISIBLE_DEVICES=0 RWKV7_NATIVE_MODEL=1 bash scripts/run-rwkv7-hf-smoke.sh
 cat results/raw/rwkv7-hf-smoke.json
 ```
 
