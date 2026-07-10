@@ -151,3 +151,49 @@ cat results/raw/rwkv7-hf-smoke.json
 The RWKV-7 adapter path expects a converted Hugging Face model directory, not a
 raw `.pth` checkpoint. The community adapter documents conversion through
 `convert_rwkv7_to_hf.py` in `btlqql/rwkv7-hf-adapter`.
+
+## RWKV-7 Wrapper Fast-Token Comparison
+
+Keep the reproducible native baseline environment unchanged. Create a separate
+environment for the FLA-backed wrapper and CUDA Graph comparison. The upstream
+V100 validation used PyTorch 2.5.1 with CUDA 12.4 and a source build reporting
+FLA 0.5.2. That FLA version is not published on PyPI, so the reproducible public
+package lane below starts with FLA 0.4.2, which supports the PyTorch 2.5 runtime.
+
+```bash
+conda create -n rwkvbench-fla python=3.10 -y
+conda activate rwkvbench-fla
+
+python -m pip install --upgrade pip
+python -m pip install "numpy<2"
+python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+python -m pip install "transformers==4.57.1" "flash-linear-attention==0.4.2" safetensors
+python -m pip install -e ./packages/benchkit
+```
+
+Verify the runtime before loading model weights:
+
+```bash
+python - <<'PY'
+import torch
+import transformers
+import fla
+
+print("torch:", torch.__version__)
+print("torch CUDA:", torch.version.cuda)
+print("transformers:", transformers.__version__)
+print("fla:", getattr(fla, "__version__", "unknown"))
+print("GPU:", torch.cuda.get_device_name(0))
+PY
+```
+
+Run the same prompt/decode shape through the wrapper's FLA, native JIT, and
+native CUDA Graph token backends:
+
+```bash
+export RWKV7_MODEL_DIR=/data/healong/models/rwkv7_g1d_01b_hf
+CUDA_VISIBLE_DEVICES=0 bash scripts/run-rwkv7-wrapper-compare.sh
+```
+
+Each result records both the requested and actual fast-token backend. Treat a
+requested/actual mismatch as a failed comparison rather than benchmark data.

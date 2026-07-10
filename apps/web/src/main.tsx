@@ -30,7 +30,7 @@ type BenchmarkRun = {
     latency_p95_ms: number;
     vram_peak_mb: number | null;
   };
-  metadata: Record<string, string | number>;
+  metadata: Record<string, string | number | boolean | null>;
 };
 
 const formatNumber = (value: number) =>
@@ -46,6 +46,7 @@ function App() {
   const bestPrefill = maxBy(runs, (run) => run.metrics.prefill_tps);
   const peakVram = maxBy(runs, (run) => run.metrics.vram_peak_mb ?? 0);
   const hardware = runs[0]?.hardware;
+  const runtimeVariants = new Set(runs.map(runtimeVariant)).size;
 
   return (
     <main className="shell">
@@ -64,7 +65,7 @@ function App() {
           icon={<Database size={18} />}
           label="Runs"
           value={String(runs.length)}
-          detail="torch-cuda sweep"
+          detail={`${runtimeVariants} runtime variant${runtimeVariants === 1 ? "" : "s"}`}
         />
         <MetricCard
           icon={<Gauge size={18} />}
@@ -205,11 +206,13 @@ function ResultTable({ runs }: { runs: BenchmarkRun[] }) {
         <thead>
           <tr>
             <th>Backend</th>
+            <th>Runtime</th>
             <th>Batch</th>
             <th>Prompt</th>
             <th>Decode TPS</th>
             <th>Prefill TPS</th>
             <th>P50 ms</th>
+            <th>P95 ms</th>
             <th>VRAM</th>
           </tr>
         </thead>
@@ -217,11 +220,13 @@ function ResultTable({ runs }: { runs: BenchmarkRun[] }) {
           {runs.map((run) => (
             <tr key={run.run_id}>
               <td>{run.backend}</td>
+              <td>{runtimeVariant(run)}</td>
               <td>{run.config.batch_size}</td>
               <td>{run.config.prompt_len}</td>
               <td>{formatNumber(run.metrics.decode_tps)}</td>
               <td>{formatNumber(run.metrics.prefill_tps)}</td>
               <td>{formatDecimal(run.metrics.latency_p50_ms)}</td>
+              <td>{formatDecimal(run.metrics.latency_p95_ms)}</td>
               <td>{formatNumber(run.metrics.vram_peak_mb ?? 0)} MB</td>
             </tr>
           ))}
@@ -232,7 +237,12 @@ function ResultTable({ runs }: { runs: BenchmarkRun[] }) {
 }
 
 function runLabel(run: BenchmarkRun) {
-  return `bs${run.config.batch_size} p${run.config.prompt_len}`;
+  return `${runtimeVariant(run)} · bs${run.config.batch_size} p${run.config.prompt_len}`;
+}
+
+function runtimeVariant(run: BenchmarkRun) {
+  const value = run.metadata.runtime_variant;
+  return typeof value === "string" ? value : run.backend;
 }
 
 function maxBy<T>(items: T[], selector: (item: T) => number): T | undefined {

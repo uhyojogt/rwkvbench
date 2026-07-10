@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from benchkit.hf_causal_lm_backend import (
+    collect_runtime_metadata,
     percentile,
     public_model_name,
     resolve_torch_dtype,
@@ -43,3 +44,26 @@ def test_public_model_name_hides_local_path(tmp_path):
 
     assert public_model_name(str(model_dir)) == "rwkv7_g1d_01b_hf"
     assert public_model_name("BlinkDL/rwkv7-g1") == "BlinkDL/rwkv7-g1"
+
+
+def test_runtime_metadata_identifies_native_jit(monkeypatch):
+    NativeModel = type("NativeRWKV7ForCausalLM", (), {})
+    monkeypatch.setenv("RWKV7_NATIVE_MODEL_JIT", "1")
+
+    metadata = collect_runtime_metadata(NativeModel())
+
+    assert metadata["runtime_variant"] == "native-jit"
+    assert metadata["rwkv7_native_model_jit"] is True
+
+
+def test_runtime_metadata_records_wrapper_backend(monkeypatch):
+    WrapperModel = type("RWKV7ForCausalLM", (), {})
+    model = WrapperModel()
+    model._rwkv7_last_fast_token_backend = "native_graph"
+    monkeypatch.setenv("RWKV7_FAST_TOKEN_BACKEND", "native_graph")
+
+    metadata = collect_runtime_metadata(model)
+
+    assert metadata["runtime_variant"] == "wrapper-native_graph"
+    assert metadata["rwkv7_fast_token_backend_requested"] == "native_graph"
+    assert metadata["rwkv7_fast_token_backend_actual"] == "native_graph"

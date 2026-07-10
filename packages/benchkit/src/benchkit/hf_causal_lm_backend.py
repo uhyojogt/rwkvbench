@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import os
 import time
 from pathlib import Path
 from uuid import uuid4
@@ -95,6 +96,8 @@ def run_hf_causal_lm_benchmark(
     total_ms = prefill_ms + decode_ms
     vram_peak_mb = peak_memory_mb(torch, torch_device)
 
+    runtime_metadata = collect_runtime_metadata(hf_model)
+
     return BenchmarkResult(
         schema_version="1.0",
         run_id=str(uuid4()),
@@ -120,6 +123,7 @@ def run_hf_causal_lm_benchmark(
             "model_class": hf_model.__class__.__name__,
             "trust_remote_code": trust_remote_code,
             "revision": revision,
+            **runtime_metadata,
         },
     )
 
@@ -265,6 +269,36 @@ def percentile(values: list[float], quantile: float) -> float:
 def public_model_name(model: str) -> str:
     path = Path(model)
     return path.name if path.exists() else model
+
+
+def collect_runtime_metadata(model) -> dict[str, object]:
+    model_class = model.__class__.__name__
+    actual_fast_backend = getattr(model, "_rwkv7_last_fast_token_backend", None)
+    requested_fast_backend = os.environ.get("RWKV7_FAST_TOKEN_BACKEND")
+
+    if model_class == "NativeRWKV7ForCausalLM":
+        native_jit = env_enabled("RWKV7_NATIVE_MODEL_JIT", default=True)
+        runtime_variant = "native-jit" if native_jit else "native-eager"
+    elif actual_fast_backend:
+        native_jit = None
+        runtime_variant = f"wrapper-{actual_fast_backend}"
+    else:
+        native_jit = None
+        runtime_variant = "hf-generic"
+
+    return {
+        "runtime_variant": runtime_variant,
+        "rwkv7_native_model_jit": native_jit,
+        "rwkv7_fast_token_backend_requested": requested_fast_backend,
+        "rwkv7_fast_token_backend_actual": actual_fast_backend,
+    }
+
+
+def env_enabled(name: str, *, default: bool) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() not in {"0", "false", "no", "off"}
 
 
 def synchronize(torch, device) -> None:
