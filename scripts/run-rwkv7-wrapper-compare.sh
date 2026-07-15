@@ -3,6 +3,8 @@ set -euo pipefail
 
 : "${RWKV7_MODEL_DIR:?Set RWKV7_MODEL_DIR to a converted RWKV-7 Hugging Face model directory}"
 
+python scripts/check-rwkv7-wrapper-runtime.py
+
 for backend in fla native_jit native_graph; do
   bash scripts/run-rwkv7-wrapper-fast-token.sh "$backend"
 done
