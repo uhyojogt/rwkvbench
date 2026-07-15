@@ -157,10 +157,12 @@ raw `.pth` checkpoint. The community adapter documents conversion through
 Keep the reproducible native baseline environment unchanged. Create a separate
 environment for the FLA-backed wrapper and CUDA Graph comparison. The upstream
 V100 validation used PyTorch 2.5.1 with CUDA 12.4 and a source build reporting
-FLA 0.5.2. That FLA version is not published on PyPI, so this lane uses the
-closest public release, FLA 0.5.1. Install its two packages without dependency
-resolution to preserve the validated PyTorch 2.5 / CUDA 12.4 runtime; FLA's
-newer CUDA extra otherwise upgrades the environment beyond this V100 lane.
+FLA 0.5.2. That FLA version is not published on PyPI. FLA 0.4.2 has an invalid
+Triton autotune key and FLA 0.5.1 requires Triton 3.3 APIs, so this legacy V100
+lane uses PyTorch 2.6.0 with its bundled Triton 3.2 and FLA 0.4.1. Triton 3.1
+can import FLA 0.4.1, but fails when its RWKV-7 autotuner receives keyword key
+arguments. Install FLA without dependency resolution so it does not replace the
+tested PyTorch and Triton pair.
 
 ```bash
 conda create -n rwkvbench-fla python=3.10 -y
@@ -168,9 +170,9 @@ conda activate rwkvbench-fla
 
 python -m pip install --upgrade pip
 python -m pip install "numpy<2"
-python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
 python -m pip install "transformers==4.57.1" safetensors einops
-python -m pip install --no-deps "fla-core==0.5.1" "flash-linear-attention==0.5.1"
+python -m pip install --no-deps "fla-core==0.4.1" "flash-linear-attention==0.4.1"
 python -m pip install -e ./packages/benchkit
 ```
 
@@ -179,19 +181,24 @@ Verify the runtime before loading model weights:
 ```bash
 python - <<'PY'
 import torch
+import triton
 import transformers
 import fla
 
 print("torch:", torch.__version__)
 print("torch CUDA:", torch.version.cuda)
+print("triton:", triton.__version__)
 print("transformers:", transformers.__version__)
 print("fla:", getattr(fla, "__version__", "unknown"))
 print("GPU:", torch.cuda.get_device_name(0))
 PY
 ```
 
-Warnings that Triton 3.1 or Python 3.10 are below the recommended versions are
-expected in this compatibility lane. An import failure is not expected.
+The Python 3.10 recommendation warning is expected in this compatibility lane.
+Triton must report 3.2.x; the comparison script rejects incompatible versions
+before loading model weights. This public-package combination remains
+experimental on the legacy Ubuntu/V100 server, so a successful import alone is
+not benchmark validation.
 
 Run the same prompt/decode shape through the wrapper's FLA, native JIT, and
 native CUDA Graph token backends:

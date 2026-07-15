@@ -2,19 +2,36 @@ from __future__ import annotations
 
 import sys
 
+from packaging.version import Version
+
 
 def main() -> None:
     try:
-        import fla
         import torch
         import transformers
         import triton
+    except Exception as exc:
+        raise RuntimeError(
+            "RWKV-7 wrapper base runtime import failed. Expected the isolated V100 lane: "
+            "torch 2.6.0+cu124, Triton 3.2.x, and transformers 4.57.1."
+        ) from exc
+
+    triton_version = Version(triton.__version__)
+    if not Version("3.2") <= triton_version < Version("3.3"):
+        raise RuntimeError(
+            f"Unsupported Triton {triton.__version__}. This wrapper lane requires "
+            "Triton 3.2.x: Triton 3.1 cannot resolve FLA autotune keys passed as "
+            "keyword arguments, while FLA 0.4.1 is not validated with Triton 3.3. "
+            "Install torch 2.6.0+cu124 to obtain Triton 3.2."
+        )
+
+    try:
+        import fla
         from fla.models.rwkv7.modeling_rwkv7 import RWKV7ForCausalLM
     except Exception as exc:
         raise RuntimeError(
-            "RWKV-7 wrapper runtime import failed. Expected the isolated V100 lane: "
-            "torch 2.5.1+cu124, transformers 4.57.1, fla-core 0.5.1, "
-            "flash-linear-attention 0.5.1."
+            "RWKV-7 FLA runtime import failed. Expected fla-core 0.4.1 and "
+            "flash-linear-attention 0.4.1."
         ) from exc
 
     del RWKV7ForCausalLM
